@@ -1,7 +1,8 @@
 import random
 
+
 class Minesweeper:
-    def __init__(self, rows=8, cols=8, mines=4):
+    def __init__(self, rows=8, cols=8, mines=4, callback=None):
         self.rows = rows
         self.cols = cols
         self.mines = mines
@@ -9,6 +10,32 @@ class Minesweeper:
         self.revealed = [[False for _ in range(cols)] for _ in range(rows)]
         self.flagged = [[False for _ in range(cols)] for _ in range(rows)]
         self.generate_board()
+        self.game_over = False
+        self.game_won = False
+        self.callback = callback
+
+    def external_move(self, row, col, action):
+
+        if self.game_over:  # Game is already over
+            return
+
+        if action == 'f':
+            self.flagged[row][col] = not self.flagged[row][col]
+        elif action == 'u':
+            if self.board[row][col] == 'M':
+                print("Boom! You hit a mine.")
+                self.game_over = True
+                return
+            else:
+                self.reveal(row, col)
+
+            if all(self.board[r][c] == 'M' or self.revealed[r][c] for r in range(self.rows) for c in range(self.cols)):
+                print("Congratulations! The robot has cleared the minefield!")
+                self.game_over = True
+                self.game_won = True
+
+        if self.callback:  # Check if a callback exists
+            self.callback(self)
 
     def generate_board(self):
         for _ in range(self.mines):
@@ -74,6 +101,8 @@ class Minesweeper:
                 self.display_board()
                 print("Congratulations! You have cleared the minefield!")
                 return
+            if self.callback:  # Check if a callback exists
+                self.callback(self)
 
     def reveal(self, row, col):
         if self.revealed[row][col] or self.flagged[row][col] or self.board[row][col] == 'M':
@@ -97,8 +126,3 @@ class Minesweeper:
                     row.append('#')
             board_repr.append(' '.join(row))
         return board_repr
-
-
-if __name__ == "__main__":
-    game = Minesweeper()
-    game.play()
