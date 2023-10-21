@@ -1,4 +1,5 @@
 from game import Minesweeper
+from queue import PriorityQueue
 import threading
 import time
 
@@ -11,12 +12,38 @@ class Solver:
         while not self.game.game_over:
             r, c, action = self.decide_move()
             self.makeMove(r, c, action)
-            time.sleep(1)  # sleep
+            #time.sleep(1)  # sleep
 
         if not self.game.game_over:
             self.game.play()
 
         print("Game Over")
+
+    @staticmethod
+    def heuristic(cell, game):
+
+        row, col = cell
+        total_distance = 0
+
+        # Loop over rows
+        for r in range(game.rows):
+
+            # Loop over cols
+            for c in range(game.cols):
+
+                # Check cell n its value is a digit
+                if game.revealed[r][c] and game.board[r][c].isdigit():
+                    # Calculate the distance between current cell and the given cell
+                    distance = abs(row - r) + abs(col - c)
+
+                    # Update the total distance by adding the value in the current cell
+                    # divided by the distance
+                    value_in_cell = int(game.board[r][c])
+                    total_distance += value_in_cell / (1 + distance)
+
+        # Return the negative total distance
+        return -total_distance
+
     def decide_move(self):
         # first move is always top corner
         if all(not any(row) for row in self.game.revealed):
@@ -44,7 +71,7 @@ class Solver:
                         unrevealed = (i, j)
                         unrevealed_neighbors.append(unrevealed)
 
-                flagged_neighbors = []
+
                 flagged_neighbors = []
                 for coordinate in neighbors:
                     i = coordinate[0]
@@ -56,7 +83,7 @@ class Solver:
                 num_of_flagged_neighbors = len(flagged_neighbors)
                 num_of_unrevealed_neighbors = len(unrevealed_neighbors)
 
-                if num == num_of_flagged_neighbors:  # mines are flagged, unveil the rest
+                if num == num_of_flagged_neighbors:  # mines are flagged unveil the rest
                     for coordinate in unrevealed_neighbors:
                         i = coordinate[0]
                         j = coordinate[1]
@@ -68,7 +95,31 @@ class Solver:
                         j = coordinate[1]
                         return (i, j, "f")
 
-        # If no definiteve move found, find cell with lowest probability
+        # if no definiteve move found, use a*
+        # # Create  priority queue to store cells based on their heuristic values.
+        # queue = PriorityQueue()
+        #
+        # # Loop through all the rows of the game board
+        # for row in range(self.game.rows):
+        #
+        #     # Loop through all the columns for the current row
+        #     for col in range(self.game.cols):
+        #
+        #         # Check if the cell is revealed or flagged
+        #         if not self.game.revealed[row][col] and not self.game.flagged[row][col]:
+        #             # Calculate the heuristic value for the cell
+        #             h = self.heuristic((row, col), self.game)
+        #
+        #             # Add the cell with its heuristic value to the priority queue
+        #             queue.put((h, (row, col, "u")))
+        #
+        # # After checking all cells if the queue is not empty
+        # # get the cell with the highest priority or lowest heuristic value
+        # if not queue.empty():
+        #     return queue.get()[1]
+
+
+            # If no a* based move found, find cell with lowest probability
         min_prob = float('inf')
         best_move = None
         for row in range(self.game.rows):
@@ -107,13 +158,25 @@ class Solver:
         game_instance.display_board()
 
 
+
+
 if __name__ == "__main__":
-    solver = Solver(None)  # Initialize solver
-    game = Minesweeper(8, 8, 4, callback=solver.gameCallback)
-    solver.game = game
+    NUM_GAMES = 10000
+    wins = 0
 
+    for _ in range(NUM_GAMES):
+        solver = Solver(None)  # Init solver
+        game = Minesweeper(20, 20, 20, callback=solver.gameCallback)
+        solver.game = game
 
-    game_thread = threading.Thread(target=solver.playGame)
-    game_thread.start()
+        game_thread = threading.Thread(target=solver.playGame)
+        game_thread.start()
+        game_thread.join()
 
-    game_thread.join()
+        # Check if the game was won
+        if game.game_won:
+            wins += 1
+
+    # Calculate the win percentage
+    win_percentage = (wins / NUM_GAMES) * 100
+    print(f"After {NUM_GAMES} games, the robot won {wins} times, with a win percentage of {win_percentage:.2f}%.")
