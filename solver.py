@@ -2,6 +2,7 @@ from game import Minesweeper
 from queue import PriorityQueue
 import threading
 import time
+import random
 
 class Solver:
 
@@ -47,7 +48,7 @@ class Solver:
     def decide_move(self):
         # first move is always top corner
         if all(not any(row) for row in self.game.revealed):
-            return (0, 0, "u")
+            return 0,0,"u"
         #loop through the current board and check the neighbors, seeing if there are any definite mines
         for r in range(self.game.rows):
             for c in range(self.game.cols):
@@ -95,28 +96,28 @@ class Solver:
                         j = coordinate[1]
                         return (i, j, "f")
 
-        # if no definiteve move found, use a*
-        # # Create  priority queue to store cells based on their heuristic values.
-        # queue = PriorityQueue()
-        #
-        # # Loop through all the rows of the game board
-        # for row in range(self.game.rows):
-        #
-        #     # Loop through all the columns for the current row
-        #     for col in range(self.game.cols):
-        #
-        #         # Check if the cell is revealed or flagged
-        #         if not self.game.revealed[row][col] and not self.game.flagged[row][col]:
-        #             # Calculate the heuristic value for the cell
-        #             h = self.heuristic((row, col), self.game)
-        #
-        #             # Add the cell with its heuristic value to the priority queue
-        #             queue.put((h, (row, col, "u")))
-        #
-        # # After checking all cells if the queue is not empty
-        # # get the cell with the highest priority or lowest heuristic value
-        # if not queue.empty():
-        #     return queue.get()[1]
+        # # if no definiteve move found, use a*
+        # Create  priority queue to store cells based on their heuristic values.
+        queue = PriorityQueue()
+
+        # Loop through all the rows of the game board
+        for row in range(self.game.rows):
+
+            # Loop through all the columns for the current row
+            for col in range(self.game.cols):
+
+                # Check if the cell is revealed or flagged
+                if not self.game.revealed[row][col] and not self.game.flagged[row][col]:
+                    # Calculate the heuristic value for the cell
+                    h = self.heuristic((row, col), self.game)
+
+                    # Add the cell with its heuristic value to the priority queue
+                    queue.put((h, (row, col, "u")))
+
+        # After checking all cells if the queue is not empty
+        # get the cell with the highest priority or lowest heuristic value
+        if not queue.empty():
+            return queue.get()[1]
 
 
             # If no a* based move found, find cell with lowest probability
@@ -157,6 +158,11 @@ class Solver:
     def gameCallback(self, game_instance):  #callback
         game_instance.display_board()
 
+    def make_random_move(self):
+        row = random.randint(0, self.game.rows - 1)
+        col = random.randint(0, self.game.cols - 1)
+        action = "u"
+        return row, col, action
 
 
 
@@ -166,7 +172,7 @@ if __name__ == "__main__":
 
     for _ in range(NUM_GAMES):
         solver = Solver(None)  # Init solver
-        game = Minesweeper(20, 20, 20, callback=solver.gameCallback)
+        game = Minesweeper(8, 8, 10, callback=solver.gameCallback)
         solver.game = game
 
         game_thread = threading.Thread(target=solver.playGame)
