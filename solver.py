@@ -48,7 +48,7 @@ class Solver:
     def decide_move(self):
         # first move is always top corner
         if all(not any(row) for row in self.game.revealed):
-            return 0,0,"u"
+            return self.pick_random_corner()
         #loop through the current board and check the neighbors, seeing if there are any definite mines
         for r in range(self.game.rows):
             for c in range(self.game.cols):
@@ -97,27 +97,27 @@ class Solver:
                         return (i, j, "f")
 
         # # if no definiteve move found, use a*
-        # Create  priority queue to store cells based on their heuristic values.
-        queue = PriorityQueue()
-
-        # Loop through all the rows of the game board
-        for row in range(self.game.rows):
-
-            # Loop through all the columns for the current row
-            for col in range(self.game.cols):
-
-                # Check if the cell is revealed or flagged
-                if not self.game.revealed[row][col] and not self.game.flagged[row][col]:
-                    # Calculate the heuristic value for the cell
-                    h = self.heuristic((row, col), self.game)
-
-                    # Add the cell with its heuristic value to the priority queue
-                    queue.put((h, (row, col, "u")))
-
-        # After checking all cells if the queue is not empty
-        # get the cell with the highest priority or lowest heuristic value
-        if not queue.empty():
-            return queue.get()[1]
+        # # Create  priority queue to store cells based on their heuristic values.
+        # queue = PriorityQueue()
+        #
+        # # Loop through all the rows of the game board
+        # for row in range(self.game.rows):
+        #
+        #     # Loop through all the columns for the current row
+        #     for col in range(self.game.cols):
+        #
+        #         # Check if the cell is revealed or flagged
+        #         if not self.game.revealed[row][col] and not self.game.flagged[row][col]:
+        #             # Calculate the heuristic value for the cell
+        #             h = self.heuristic((row, col), self.game)
+        #
+        #             # Add the cell with its heuristic value to the priority queue
+        #             queue.put((h, (row, col, "u")))
+        #
+        # # After checking all cells if the queue is not empty
+        # # get the cell with the highest priority or lowest heuristic value
+        # if not queue.empty():
+        #     return queue.get()[1]
 
 
             # If no a* based move found, find cell with lowest probability
@@ -164,6 +164,11 @@ class Solver:
         action = "u"
         return row, col, action
 
+    def pick_random_corner(self):
+        corners = [(0, 0), (0, self.game.cols - 1), (self.game.rows - 1, 0), (self.game.rows - 1, self.game.cols - 1)]
+        chosen_corner = random.choice(corners)
+        action = "u"
+        return chosen_corner[0], chosen_corner[1], action
 
 
 if __name__ == "__main__":
